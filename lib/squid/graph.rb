@@ -13,7 +13,7 @@ module Squid
   class Graph
     extend Settings
     has_settings :baseline, :border, :chart, :colors, :every, :formats, :height
-    has_settings :legend, :line_widths, :steps, :ticks, :type, :labels, :min, :max, :domain_labels, :strftime
+    has_settings :legend, :line_widths, :steps, :ticks, :type, :labels, :min, :max, :domain_labels, :strftime, :tick_padding
 
     def initialize(document, data = {}, settings = {})
       @data, @settings = data, settings
@@ -55,7 +55,7 @@ module Squid
 
     def draw_categories
       labels = @data.values.map(&:keys).flatten.uniq.sort
-      @plot.categories labels, domain_labels: domain_labels, every: every, strftime: strftime, ticks: ticks
+      @plot.categories labels, domain_labels: domain_labels, every: every, strftime: strftime, ticks: ticks, tick_padding: tick_padding
       @plot.horizontal_line 0.0
     end
 

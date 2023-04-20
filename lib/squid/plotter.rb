@@ -65,10 +65,9 @@ module Squid
       end
     end
 
-    def categories(labels, every:, ticks:, domain_labels:, strftime:)
+    def categories(labels, every:, ticks:, domain_labels:, strftime:, tick_padding:)
       label_factor = labels.count.to_f
       w = width / label_factor
-      padding = 2
       numeric_domain = labels.all? { |l| l.is_a?(Numeric) }
       if numeric_domain
         label_baseline = labels.first.to_f
@@ -88,8 +87,8 @@ module Squid
         x = left + w * (label_offset)
         options = category_options.merge(
           {
-            width: (every * w) - (2 * padding),
-            at: [x + padding - (w *(every/2.0-0.5)), @bottom]
+            width: (every * w) - (2 * tick_padding),
+            at: [x + tick_padding - (w *(every/2.0-0.5)), @bottom]
           }
         )
         label_text = if strftime

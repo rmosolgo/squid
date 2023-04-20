@@ -77,7 +77,8 @@ module Squid
       min:          {as: optional_integer, default: nil},
       max:          {as: optional_integer, default: nil},
       domain_labels:{as: optional_array, default: nil},
-      strftime:      {as: optional_string, default: nil},
+      strftime:     {as: optional_string, default: nil},
+      tick_padding: {as: float, default: '2'},
     }
 
     attr_accessor *ATTRIBUTES.keys
