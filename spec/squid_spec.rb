@@ -187,6 +187,11 @@ describe 'Prawn::Document#chart' do
       it { expect(points_of(chart).size).to be 9 }
     end
 
+    describe 'accepts steps verbatim' do
+      let(:settings) { options.merge steps: [0, 5, 10], chart: false }
+      it { expect(points_of(chart).size).to be 3 }
+    end
+
     describe 'shows/hides the chart with Squid.configuration.chart' do
       before { Squid.configure {|config| config.steps = 8} }
       after { Squid.configure {|config| config.steps = 4} }

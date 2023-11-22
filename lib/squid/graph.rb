@@ -42,8 +42,7 @@ module Squid
     end
 
     def draw_gridlines
-      options = {height: grid_height, count: steps, skip_baseline: baseline}
-      Gridline.for(**options).each do |line|
+      Gridline.for(height: grid_height, steps: steps, skip_baseline: baseline).each do |line|
         @plot.horizontal_line line.y, line_width: 0.5, transparency: 0.25
       end
     end
@@ -100,8 +99,9 @@ module Squid
 
     def axis(first:, last:)
       series = @data.values[first, last]
-      options = {steps: steps, stack: stack?, format: formats[first], min: min, max: max}
-      Axis.new(series, **options) {|label| @plot.width_of label}
+      Axis.new(series, steps: steps, stack: stack?, format: formats[first], min: min, max: max) do |label|
+        @plot.width_of label
+      end
     end
 
     def bottom
