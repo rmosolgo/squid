@@ -67,7 +67,7 @@ module Squid
 
     def categories(labels, every:, ticks:, domain_labels:, strftime:, tick_padding:)
       label_factor = labels.count.to_f
-      w = width / label_factor
+      width_per_label = (width - (tick_padding * label_factor * 2)) / label_factor
       numeric_domain = labels.all? { |l| l.is_a?(Numeric) }
       if numeric_domain
         label_baseline = labels.first.to_f
@@ -78,27 +78,51 @@ module Squid
 
       labels_to_draw = domain_labels || labels
 
+      label_size = 8
+      has_confirmed_size = false
+
+      label_texts = labels.map do |label|
+        if strftime
+          # TODO this only works in Rails
+          Time.zone.at(label).strftime(strftime)
+        else
+          label.to_s
+        end
+      end
+
+      while !has_confirmed_size
+        has_confirmed_size = true
+        label_texts.each do |l|
+          l_size = @pdf.width_of(l, size: label_size)
+          if l_size > width_per_label
+            label_size -= 1
+            has_confirmed_size = false
+          end
+        end
+        if label_size == 0
+          warn("Failed to produce a better label size within #{width_per_label} for: #{label_texts.inspect}")
+          has_confirmed_size = true
+          label_size = 8
+        end
+      end
+
       labels_to_draw.each.with_index do |label, index|
         label_offset = if numeric_domain
           ((label - label_baseline) / label_offset_factor) * (labels.size - 1)
         else
           index
         end
-        x = left + w * (label_offset)
+        x = left + width_per_label * (label_offset)
         options = category_options.merge(
           {
-            width: (every * w) - (2 * tick_padding),
-            at: [x + tick_padding - (w *(every/2.0-0.5)), @bottom]
+            width: (every * width_per_label) - (2 * tick_padding),
+            at: [x + tick_padding - (width_per_label * (every/2.0-0.5)), @bottom],
+            size: label_size,
           }
         )
-        label_text = if strftime
-          # TODO this only works in Rails
-          Time.zone.at(label).strftime(strftime)
-        else
-          label.to_s
-        end
+        label_text = label_texts[index]
         @pdf.text_box label_text, options if (index % every).zero?
-        @pdf.stroke_vertical_line @bottom, @bottom - 2, at: x + w/2 if ticks
+        @pdf.stroke_vertical_line @bottom, @bottom - 2, at: x + width_per_label/2 if ticks
       end
     end
 
@@ -163,12 +187,12 @@ module Squid
     end
 
     def text_options
-      options = {}
-      options[:height] = 20
-      options[:size] = 8
-      options[:valign] = :center
-      options[:overflow] = :shrink_to_fit
-      options
+      {
+        height: 20,
+        size: 8,
+        valign: :center,
+        overflow: :shrink_to_fit
+      }
     end
 
     def items(series, colors: [], fill: false, count: 1, starting_at: 0, &block)
