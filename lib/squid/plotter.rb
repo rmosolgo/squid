@@ -67,7 +67,9 @@ module Squid
 
     def categories(labels, every:, ticks:, domain_labels:, strftime:, tick_padding:)
       label_factor = labels.count.to_f
-      width_per_label = (width - (tick_padding * label_factor * 2)) / label_factor
+      # TODO I think this is broken if `every:` isn't 1
+      width_per_label = width / label_factor
+      writeable_width_per_label = width_per_label - (tick_padding * 2)
       numeric_domain = labels.all? { |l| l.is_a?(Numeric) }
       if numeric_domain
         label_baseline = labels.first.to_f
@@ -81,7 +83,7 @@ module Squid
       label_size = 8
       has_confirmed_size = false
 
-      label_texts = labels.map do |label|
+      label_texts = labels_to_draw.map do |label|
         if strftime
           # TODO this only works in Rails
           Time.zone.at(label).strftime(strftime)
@@ -94,13 +96,13 @@ module Squid
         has_confirmed_size = true
         label_texts.each do |l|
           l_size = @pdf.width_of(l, size: label_size)
-          if l_size > width_per_label
+          if l_size > writeable_width_per_label
             label_size -= 1
             has_confirmed_size = false
           end
         end
         if label_size == 0
-          warn("Failed to produce a better label size within #{width_per_label} for: #{label_texts.inspect}")
+          warn("Failed to produce a better label size within #{writeable_width_per_label} for: #{label_texts.inspect}")
           has_confirmed_size = true
           label_size = 8
         end
